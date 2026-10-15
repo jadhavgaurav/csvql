@@ -28,13 +28,13 @@ fn containsWord(text: []const u8, word: []const u8) bool {
 /// Visit every flag in the OPTIONS block of the help text. Only the first
 /// column of each entry is read, so flags mentioned in descriptions are skipped.
 fn forEachHelpFlag(context: anytype, visit: fn (@TypeOf(context), []const u8) anyerror!void) !void {
-    const start = std.mem.indexOf(u8, main_source, "\\\\OPTIONS:\n") orelse return error.OptionsBlockNotFound;
+    const start = std.mem.indexOf(u8, main_source, "\\\\OPTIONS:") orelse return error.OptionsBlockNotFound;
     const rest = main_source[start..];
     const end = std.mem.indexOf(u8, rest, "\\\\EXAMPLES:") orelse return error.OptionsBlockNotFound;
     var lines = std.mem.splitScalar(u8, rest[0..end], '\n');
     _ = lines.next(); // the OPTIONS: line
     while (lines.next()) |raw| {
-        const line = std.mem.trim(u8, raw, " \t");
+        const line = std.mem.trim(u8, raw, " \t\r"); // \r: CRLF checkouts (windows)
         // Entries look like `\\  -o, --output <file>  text`; continuation lines are indented deeper.
         if (!std.mem.startsWith(u8, raw, "    \\\\  -")) continue;
         const entry = std.mem.trim(u8, line["\\\\".len..], " ");
